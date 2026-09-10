@@ -303,3 +303,120 @@ try {
     } catch (e) {}
   });
 } catch (e) {}
+// ============================================
+//   ЧАТ-КОМАНДЫ (Изолированный и безопасный блок)
+// ============================================
+try {
+  Chat.OnPlayerChat.Add(function(player, message) {
+    // Защита от пустого сообщения
+    if (!message || typeof message !== 'string') return;
+    
+    var msg = message.toLowerCase().trim();
+    
+    // --- СПРАВКА ---
+    if (msg === "/help") {
+      player.PopUp(
+        "=== СПИСОК КОМАНД ===\n" +
+        "/help — эта справка\n" +
+        "/myid — показать твой ID\n" +
+        "/coins — баланс монет\n" +
+        "/respawn — мгновенный респаун\n" +
+        "\n--- ТОЛЬКО ДЛЯ АДМИНА ---\n" +
+        "/admin — выдать себе админ-права\n" +
+        "/god — включить бессмертие\n" +
+        "/fly — включить полёт"
+      );
+      return;
+    }
+
+    // --- ЛИЧНЫЕ ДАННЫЕ ---
+    if (msg === "/myid") {
+      var id = player.id || player.Id || "Не удалось получить ID";
+      player.PopUp("Твой ID: " + id);
+      return;
+    }
+
+    if (msg === "/coins") {
+      var score = 0;
+      try {
+        if (player.Properties && typeof player.Properties.Scores.Value === 'number') {
+          score = player.Properties.Scores.Value;
+        }
+      } catch (e) {}
+      player.PopUp("У тебя " + score + " монет.");
+      return;
+    }
+
+    if (msg === "/respawn") {
+      try {
+        player.Spawns.Spawn();
+        player.PopUp("Ты переспавнен!");
+      } catch (e) {
+        player.PopUp("Ошибка респауна.");
+      }
+      return;
+    }
+
+    // --- ПРОВЕРКА НА АДМИНА (для админ-команд) ---
+    var isAdmin = false;
+    try {
+      if (player && (player.id === "971A66BA801843CF" || player.Id === "971A66BA801843CF")) {
+        isAdmin = true;
+      }
+    } catch (e) {}
+
+    if (isAdmin) {
+      // Админ: Выдача прав
+      if (msg === "/admin") {
+        try {
+          player.Inventory.Main.Value = true;
+          player.Inventory.MainInfinity.Value = true;
+          player.Inventory.Secondary.Value = true;
+          player.Inventory.SecondaryInfinity.Value = true;
+          player.Inventory.Explosive.Value = true;
+          player.Inventory.ExplosiveInfinity.Value = true;
+          player.Inventory.Build.Value = true;
+          player.Inventory.BuildInfinity.Value = true;
+          player.Build.FlyEnable.Value = true;
+          Damage.GetContext().DamageOut.Value = false; // Бессмертие
+          player.PopUp("🛡 Админ-права выданы!");
+        } catch (e) {
+          player.PopUp("Ошибка выдачи прав.");
+        }
+        return;
+      }
+
+      // Админ: Бессмертие
+      if (msg === "/god") {
+        try {
+          Damage.GetContext().DamageOut.Value = false;
+          player.PopUp("🛡 Бессмертие ВКЛ.");
+        } catch (e) {
+          player.PopUp("Не удалось включить бессмертие.");
+        }
+        return;
+      }
+
+      // Админ: Полёт
+      if (msg === "/fly") {
+        try {
+          player.Build.FlyEnable.Value = true;
+          player.PopUp("🪽 Полёт ВКЛ.");
+        } catch (e) {
+          player.PopUp("Не удалось включить полёт.");
+        }
+        return;
+      }
+    } else {
+      // Если игрок НЕ админ, но пишет админ-команду
+      if (msg === "/admin" || msg === "/god" || msg === "/fly") {
+        player.PopUp("❌ Эта команда доступна только администратору!");
+        return;
+      }
+    }
+  });
+} catch (e) {
+  // Если сам сервис чата не существует в этой версии игры,
+  // скрипт просто пропустит этот блок и не упадет.
+  console.log("Chat service not available or disabled.");
+}
