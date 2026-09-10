@@ -1,0 +1,23 @@
+{
+  "ApiVersion": 2,
+  "Name": "тяночка занята!",
+  "Description": "Конструктор: строй, фармь монеты, покупай скины/оружие/полёт. Админ — всё бесконечное. Бесконечное время, 1 команда.",
+  "DefaultLang": "ru",
+  "PopupsEnabled": true,
+  "MapLists": [
+    {
+      "MapListId": 1,
+      "Name": "Все карты"
+    }
+  ],
+  "Parameters": {
+    "Bool": [
+      {
+        "Name": "MapRotation",
+        "DisplayName": "Ротация карт",
+        "Default": false,
+        "Order": 1
+      }
+    ]
+  }
+}
