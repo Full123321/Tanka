@@ -1,401 +1,305 @@
 // ============================================
-//   РЕЖИМ "тяночка занята!"
-//   1 команда | бесконечное время | админ 971A66BA801843CF
+// gamemode.js — максимально стабильный режим
+// ID админа: 971A66BA801843CF
 // ============================================
-
-Room.PopUp("✅ Скрипт загружен! Версия 2.0");
 
 var CREATOR_ID = "971A66BA801843CF";
 
-// --- ПОПАПЫ ---
-Room.PopupsEnable = true;
-
-// ============================================
-//   1. КОМАНДЫ — В САМОМ НАЧАЛЕ
-//   (чтобы работали даже если что-то ниже упадёт)
-// ============================================
-
-Teams.OnRequestJoinTeam.Add(function(player, team) {
-  team.Add(player);
-  if (IsAdmin(player)) {
-    GiveAdmin(player);
-  } else {
-    GiveDefault(player);
-  }
-});
-
-Teams.OnPlayerChangeTeam.Add(function(player) {
-  player.Spawns.Spawn();
-});
-
-Teams.Add("Blue", "Строители", { r: 50, g: 150, b: 255 });
-Teams.Get("Blue").Spawns.SpawnPointsGroups.Add(1);
-
-// ============================================
-//   2. БАЗОВАЯ НАСТРОЙКА
-// ============================================
-
-Spawns.GetContext().RespawnTime.Value = 0;
-
-Properties.GetContext().GameModeName.Value = "тяночка занята!";
-Ui.GetContext().Hint.Value = "тяночка занята! /help — все команды и зоны";
-
-BreackGraph.BreackAll = true;
-BreackGraph.OnlyPlayerBlocksDmg = false;
-BreackGraph.WeakBlocks = false;
-
-LeaderBoard.PlayerLeaderBoardValues = [
-  { Value: "Scores", DisplayName: "Coins", ShortDisplayName: "🪙" },
-  { Value: "Kills", DisplayName: "Kills", ShortDisplayName: "K" },
-  { Value: "Deaths", DisplayName: "Deaths", ShortDisplayName: "D" },
-  { Value: "Spawns", DisplayName: "Spawns", ShortDisplayName: "S" }
-];
-
-// ============================================
-//   3. ИНВЕНТАРЬ ПО УМОЛЧАНИЮ
-// ============================================
-var invCtx = Inventory.GetContext();
-invCtx.Main.Value = false;
-invCtx.Secondary.Value = false;
-invCtx.Melee.Value = true;
-invCtx.Explosive.Value = false;
-invCtx.Build.Value = true;
-invCtx.BuildInfinity.Value = true;
-invCtx.MainInfinity.Value = false;
-invCtx.SecondaryInfinity.Value = false;
-invCtx.ExplosiveInfinity.Value = false;
-
-// ============================================
-//   4. СТРОИТЕЛЬНЫЕ ИНСТРУМЕНТЫ
-//   Подтверждённые — напрямую, остальные — try-catch
-// ============================================
-var b = Build.GetContext();
-b.BuildModeEnable.Value = true;
-b.Pipette.Value = true;
-b.FloodFill.Value = true;
-b.FillQuad.Value = true;
-b.RemoveQuad.Value = true;
-b.BalkLenChange.Value = true;
-b.FlyEnable.Value = true;
-try { b.SetSkyEnable.Value = true; } catch(e) {}
-try { b.GenMapEnable.Value = true; } catch(e) {}
-try { b.ChangeCameraPointsEnable.Value = true; } catch(e) {}
-try { b.QuadChangeEnable.Value = true; } catch(e) {}
-try { b.CollapseChangeEnable.Value = true; } catch(e) {}
-try { b.RenameMapEnable.Value = true; } catch(e) {}
-try { b.ChangeMapAuthorsEnable.Value = true; } catch(e) {}
-try { b.LoadMapEnable.Value = true; } catch(e) {}
-try { b.ChangeSpawnsEnable.Value = true; } catch(e) {}
-try { b.BlocksSet.Value = BuildBlocksSet.AllClear; } catch(e) {}
-
-// ============================================
-//   5. ФУНКЦИИ (объявления, JS их поднимет)
-// ============================================
+// --- Вспомогательная функция проверки админа ---
 function IsAdmin(player) {
   try {
-    if (player.id === CREATOR_ID) return true;
-  } catch(e) {}
+    if (player && (player.id === CREATOR_ID || player.Id === CREATOR_ID)) {
+      return true;
+    }
+  } catch (e) {
+    // Игнорируем ошибки, если объект игрока невалиден
+  }
   return false;
 }
 
-function GiveAdmin(player) {
-  player.Inventory.Main.Value = true;
-  player.Inventory.MainInfinity.Value = true;
-  player.Inventory.Secondary.Value = true;
-  player.Inventory.SecondaryInfinity.Value = true;
-  player.Inventory.Melee.Value = true;
-  player.Inventory.Explosive.Value = true;
-  player.Inventory.ExplosiveInfinity.Value = true;
-  player.Inventory.Build.Value = true;
-  player.Inventory.BuildInfinity.Value = true;
+// --- Настройка глобальных свойств (в try-catch) ---
+try {
+  Room.PopupsEnable = true;
+  Spawns.GetContext().RespawnTime.Value = 0;
+  Ui.GetContext().Hint.Value = "Режим загружен. /help — команды";
+} catch (e) {}
 
-  player.Build.BuildModeEnable.Value = true;
-  player.Build.Pipette.Value = true;
-  player.Build.FloodFill.Value = true;
-  player.Build.FillQuad.Value = true;
-  player.Build.RemoveQuad.Value = true;
-  player.Build.BalkLenChange.Value = true;
-  player.Build.FlyEnable.Value = true;
-  try { player.Build.SetSkyEnable.Value = true; } catch(e) {}
-  try { player.Build.GenMapEnable.Value = true; } catch(e) {}
-  try { player.Build.ChangeCameraPointsEnable.Value = true; } catch(e) {}
-  try { player.Build.QuadChangeEnable.Value = true; } catch(e) {}
-  try { player.Build.CollapseChangeEnable.Value = true; } catch(e) {}
-  try { player.Build.RenameMapEnable.Value = true; } catch(e) {}
-  try { player.Build.ChangeMapAuthorsEnable.Value = true; } catch(e) {}
-  try { player.Build.LoadMapEnable.Value = true; } catch(e) {}
-  try { player.Build.ChangeSpawnsEnable.Value = true; } catch(e) {}
-  try { player.Build.BlocksSet.Value = BuildBlocksSet.AllClear; } catch(e) {}
-
-  try { player.Damage.DamageIn.Value = false; } catch(e) {}
-
-  player.PopUp("🛡 ТЫ АДМИН! Всё бесконечное!");
-  player.Ui.Hint.Value = "Админ! /help — все команды и зоны";
-}
-
-function GiveDefault(player) {
-  player.Inventory.Main.Value = false;
-  player.Inventory.Secondary.Value = false;
-  player.Inventory.Melee.Value = true;
-  player.Inventory.Explosive.Value = false;
-  player.Inventory.Build.Value = true;
-  player.Inventory.BuildInfinity.Value = true;
-  player.Inventory.MainInfinity.Value = false;
-  player.Inventory.SecondaryInfinity.Value = false;
-  player.Inventory.ExplosiveInfinity.Value = false;
-  player.Build.FlyEnable.Value = false;
-  try { player.Damage.DamageIn.Value = true; } catch(e) {}
-  player.PopUp("Добро пожаловать! У тебя только лопата. Фармь монеты и покупай!");
-  player.Ui.Hint.Value = "Фарм → Магазин. /help — все команды и зоны";
-}
-
-// ============================================
-//   6. ПРИ СПАВНЕ
-// ============================================
-Spawns.OnSpawn.Add(function(player) {
-  if (IsAdmin(player)) {
-    GiveAdmin(player);
+// --- Создание команды (Строители) ---
+try {
+  var team = Teams.Add("Blue", "Строители", { r: 0.2, g: 0.6, b: 1 });
+  if (team) {
+    team.Spawns.SpawnPointsGroups.Add(1);
   }
-  try { ++player.Properties.Spawns.Value; } catch(e) {}
-});
+} catch (e) {}
 
-// ============================================
-//   7. ЗОНЫ ФАРМА МОНЕТ
-// ============================================
-function setupFarm(tag, viewTag, cost, color) {
-  try {
-    var area = AreaPlayerTriggerService.Get(tag);
-    area.Tags = [tag];
-    area.Enable = true;
-    area.OnEnter.Add(function(p) {
-      p.Properties.Scores.Value += cost;
-      p.Ui.Hint.Value = "+" + cost + " 🪙";
-    });
-    var view = AreaViewService.GetContext().Get(viewTag);
-    view.Tags = [tag];
-    view.Color = color;
-    view.Enable = true;
-  } catch(e) {}
-}
-
-setupFarm("farm1", "farm1View", 10, { r: 255, g: 255, b: 0 });
-setupFarm("farm2", "farm2View", 50, { r: 255, g: 200, b: 0 });
-setupFarm("farm3", "farm3View", 100, { r: 255, g: 150, b: 0 });
-
-// ============================================
-//   8. ЗОНЫ МАГАЗИНА
-// ============================================
-function buyCheck(player, cost, successMsg, failMsg) {
-  if (player.Properties.Scores.Value >= cost) {
-    player.Properties.Scores.Value -= cost;
-    player.PopUp(successMsg);
-    player.Ui.Hint.Value = successMsg;
-    return true;
-  } else {
-    player.Ui.Hint.Value = failMsg;
-    return false;
-  }
-}
-
-function setupBuy(tag, viewTag, cost, success, color, callback) {
-  try {
-    var area = AreaPlayerTriggerService.Get(tag);
-    area.Tags = [tag];
-    area.Enable = true;
-    area.OnEnter.Add(function(p) {
-      if (IsAdmin(p)) { p.Ui.Hint.Value = "У админа уже всё есть"; return; }
-      if (buyCheck(p, cost, success, "Нужно " + cost + " 🪙")) {
-        callback(p);
+// --- Обработка входа игрока в команду ---
+try {
+  Teams.OnRequestJoinTeam.Add(function(player, team) {
+    try {
+      team.Add(player);
+      // Выдача прав при входе
+      if (IsAdmin(player)) {
+        // Админские права
+        player.Inventory.Main.Value = true;
+        player.Inventory.MainInfinity.Value = true;
+        player.Inventory.Secondary.Value = true;
+        player.Inventory.SecondaryInfinity.Value = true;
+        player.Inventory.Melee.Value = true;
+        player.Inventory.Explosive.Value = true;
+        player.Inventory.ExplosiveInfinity.Value = true;
+        player.Inventory.Build.Value = true;
+        player.Inventory.BuildInfinity.Value = true;
+        
+        player.Build.BuildModeEnable.Value = true;
+        player.Build.FlyEnable.Value = true;
+        
+        // Бессмертие
+        Damage.GetContext().DamageOut.Value = false;
+        
+        player.PopUp("🛡 ТЫ АДМИН! Всё доступно.");
+      } else {
+        // Обычные права
+        player.Inventory.Main.Value = false;
+        player.Inventory.Secondary.Value = false;
+        player.Inventory.Melee.Value = true;
+        player.Inventory.Explosive.Value = false;
+        player.Inventory.Build.Value = true;
+        player.Inventory.BuildInfinity.Value = true;
+        player.Build.FlyEnable.Value = false;
+        
+        player.PopUp("хай,долбаёб!");
       }
-    });
+    } catch (e) {}
+  });
+} catch (e) {}
+
+// --- Обработка спавна (перепроверка прав) ---
+try {
+  Spawns.OnSpawn.Add(function(player) {
+    try {
+      if (IsAdmin(player)) {
+        // Дублируем выдачу прав на случай респавна
+        player.Inventory.Main.Value = true;
+        player.Inventory.MainInfinity.Value = true;
+        player.Inventory.Secondary.Value = true;
+        player.Inventory.SecondaryInfinity.Value = true;
+        player.Inventory.Explosive.Value = true;
+        player.Inventory.ExplosiveInfinity.Value = true;
+        player.Inventory.Build.Value = true;
+        player.Inventory.BuildInfinity.Value = true;
+        player.Build.FlyEnable.Value = true;
+        Damage.GetContext().DamageOut.Value = false;
+      }
+    } catch (e) {}
+  });
+} catch (e) {}
+
+// --- Обработка смерти и убийств ---
+try {
+  Damage.OnDeath.Add(function(player) {
+    try {
+      if (player.Properties) player.Properties.Deaths.Value = (player.Properties.Deaths.Value || 0) + 1;
+    } catch (e) {}
+  });
+
+  Damage.OnKill.Add(function(killer, killed) {
+    try {
+      if (killer && killed && killed.Team && killed.Team !== killer.Team) {
+        if (killer.Properties) {
+          killer.Properties.Kills.Value = (killer.Properties.Kills.Value || 0) + 1;
+          killer.Properties.Scores.Value = (killer.Properties.Scores.Value || 0) + 20;
+          killer.Ui.Hint.Value = "+20 монет за убийство!";
+        }
+      }
+    } catch (e) {}
+  });
+} catch (e) {}
+
+// --- Настройка зон (Фарм) ---
+function setupFarmZone(tag, viewTag, amount, color) {
+  try {
+    var trigger = AreaPlayerTriggerService.Get(tag + "Trigger");
+    if (trigger) {
+      trigger.Tags = [tag];
+      trigger.Enable = true;
+      trigger.OnEnter.Add(function(p) {
+        try {
+          if (p.Properties) {
+            p.Properties.Scores.Value = (p.Properties.Scores.Value || 0) + amount;
+            p.Ui.Hint.Value = "+" + amount + " монет";
+          }
+        } catch (e) {}
+      });
+    }
+    
     var view = AreaViewService.GetContext().Get(viewTag);
-    view.Tags = [tag];
-    view.Color = color;
-    view.Enable = true;
-  } catch(e) {}
+    if (view) {
+      view.Tags = [tag];
+      view.Color = color;
+      view.Enable = true;
+    }
+  } catch (e) {}
 }
 
-setupBuy("buyWeapon", "buyWeaponView", 100, "🔫 Основное оружие куплено!", { r: 255, g: 0, b: 0 }, function(p) {
-  p.Inventory.Main.Value = true;
-});
-setupBuy("buySecondary", "buySecondaryView", 50, "🔫 Вторичное оружие куплено!", { r: 200, g: 0, b: 0 }, function(p) {
-  p.Inventory.Secondary.Value = true;
-});
-setupBuy("buyInfWeapon", "buyInfWeaponView", 300, "∞ Бесконечные патроны!", { r: 150, g: 0, b: 150 }, function(p) {
-  p.Inventory.MainInfinity.Value = true;
-  p.Inventory.SecondaryInfinity.Value = true;
-});
-setupBuy("buyExplosive", "buyExplosiveView", 200, "💣 Взрывчатка куплена!", { r: 100, g: 100, b: 0 }, function(p) {
-  p.Inventory.Explosive.Value = true;
-});
-setupBuy("buyFly", "buyFlyView", 500, "🪽 Полёт куплен!", { r: 0, g: 255, b: 255 }, function(p) {
-  p.Build.FlyEnable.Value = true;
-});
-setupBuy("buyHp", "buyHpView", 150, "❤ HP увеличен!", { r: 0, g: 255, b: 0 }, function(p) {
-  try { contextedProperties.GetContext(p).MaxHp.Value = 200; } catch(e) {
-    try { p.ContextedProperties.MaxHp.Value = 200; } catch(e2) {
-      try { contextedProperties.GetContext().MaxHp.Value = 200; } catch(e3) {}
-    }
-  }
-});
-setupBuy("buySkin", "buySkinView", 250, "👕 Скин куплен!", { r: 255, g: 0, b: 255 }, function(p) {
-  try { contextedProperties.GetContext(p).SkinType.Value = 1; } catch(e) {
-    try { p.ContextedProperties.SkinType.Value = 1; } catch(e2) {
-      try { contextedProperties.GetContext().SkinType.Value = 1; } catch(e3) {}
-    }
-  }
-});
-setupBuy("buyBlocks", "buyBlocksView", 100, "🧱 Все блоки открыты!", { r: 100, g: 100, b: 100 }, function(p) {
-  try { p.Build.BlocksSet.Value = BuildBlocksSet.AllClear; } catch(e) {}
-});
+setupFarmZone("farm1", "farm1View", 10, { r: 1, g: 1, b: 0 });
+setupFarmZone("farm2", "farm2View", 50, { r: 1, g: 0.8, b: 0 });
+setupFarmZone("farm3", "farm3View", 100, { r: 1, g: 0.6, b: 0 });
 
-// ============================================
-//   9. БОТЫ (только админ)
-// ============================================
-try {
-  var botT = AreaPlayerTriggerService.Get("botSpawn");
-  botT.Tags = ["botSpawn"];
-  botT.Enable = true;
-  botT.OnEnter.Add(function(p) {
-    if (IsAdmin(p)) {
-      try { Bots.Spawn(1, 1); p.PopUp("🤖 Бот заспавнен!"); } catch(e) { p.PopUp("Бот: API недоступен"); }
-    } else {
-      p.Ui.Hint.Value = "Только админ может спавнить ботов";
-    }
-  });
-} catch(e) {}
-
-// ============================================
-//   10. СЕРВИСНЫЕ ЗОНЫ
-// ============================================
-try {
-  var tp = AreaPlayerTriggerService.Get("tp");
-  tp.Tags = ["tp"];
-  tp.Enable = true;
-  tp.OnEnter.Add(function(p) { p.Spawns.Spawn(); p.Ui.Hint.Value = "Телепорт!"; });
-} catch(e) {}
-
-try {
-  var onl = AreaPlayerTriggerService.Get("online");
-  onl.Tags = ["online"];
-  onl.Enable = true;
-  onl.OnEnter.Add(function(p) {
-    try { p.Ui.Hint.Value = "Игроков онлайн: " + Players.Count; } catch(e) {
-      p.Ui.Hint.Value = "Онлайн недоступен";
-    }
-  });
-} catch(e) {}
-
-try {
-  var idz = AreaPlayerTriggerService.Get("showId");
-  idz.Tags = ["showId"];
-  idz.Enable = true;
-  idz.OnEnter.Add(function(p) {
-    try { p.Ui.Hint.Value = "Твой ID: " + p.id; } catch(e) {}
-  });
-} catch(e) {}
-
-// ============================================
-//   11. СМЕРТЬ И УБИЙСТВО
-// ============================================
-Damage.OnDeath.Add(function(player) {
-  try { ++player.Properties.Deaths.Value; } catch(e) {}
-});
-
-Damage.OnKill.Add(function(player, killed) {
+// --- Настройка зон (Магазин) ---
+function setupBuyZone(tag, viewTag, cost, msg, color, callback) {
   try {
-    if (killed.Team != null && killed.Team != player.Team) {
-      ++player.Properties.Kills.Value;
-      player.Properties.Scores.Value += 20;
-      player.Ui.Hint.Value = "+20 🪙 за убийство!";
+    var trigger = AreaPlayerTriggerService.Get(tag + "Trigger");
+    if (trigger) {
+      trigger.Tags = [tag];
+      trigger.Enable = true;
+      trigger.OnEnter.Add(function(p) {
+        try {
+          if (IsAdmin(p)) {
+            p.Ui.Hint.Value = "У админа уже всё есть";
+            return;
+          }
+          var currentScore = p.Properties ? p.Properties.Scores.Value : 0;
+          if (currentScore >= cost) {
+            if (p.Properties) p.Properties.Scores.Value = currentScore - cost;
+            callback(p);
+            p.PopUp(msg);
+            p.Ui.Hint.Value = msg;
+          } else {
+            p.Ui.Hint.Value = "Нужно " + cost + " монет";
+          }
+        } catch (e) {}
+      });
     }
-  } catch(e) {}
-});
 
-// ============================================
-//   12. ЧАТ-КОМАНДЫ
-// ============================================
+    var view = AreaViewService.GetContext().Get(viewTag);
+    if (view) {
+      view.Tags = [tag];
+      view.Color = color;
+      view.Enable = true;
+    }
+  } catch (e) {}
+}
+
+// Примеры магазинов (цены и эффекты)
+setupBuyZone("buyWeapon", "buyWeaponView", 100, "🔫 Оружие куплено!", { r: 1, g: 0, b: 0 }, function(p) { p.Inventory.Main.Value = true; });
+setupBuyZone("buySecondary", "buySecondaryView", 50, "🔫 Вторичное куплено!", { r: 0.8, g: 0, b: 0 }, function(p) { p.Inventory.Secondary.Value = true; });
+setupBuyZone("buyInfWeapon", "buyInfWeaponView", 300, "∞ Бесконечные патроны!", { r: 0.6, g: 0, b: 0.6 }, function(p) { p.Inventory.MainInfinity.Value = true; p.Inventory.SecondaryInfinity.Value = true; });
+setupBuyZone("buyExplosive", "buyExplosiveView", 200, "💣 Взрывчатка куплена!", { r: 0.4, g: 0.4, b: 0 }, function(p) { p.Inventory.Explosive.Value = true; });
+setupBuyZone("buyFly", "buyFlyView", 500, "🪽 Полёт куплен!", { r: 0, g: 1, b: 1 }, function(p) { p.Build.FlyEnable.Value = true; });
+setupBuyZone("buyHp", "buyHpView", 150, "❤ HP увеличен!", { r: 0, g: 1, b: 0 }, function(p) { try { contextedProperties.GetContext().MaxHp.Value = 200; } catch(e){} });
+setupBuyZone("buySkin", "buySkinView", 250, "👕 Скин куплен!", { r: 1, g: 0, b: 1 }, function(p) { try { contextedProperties.GetContext().SkinType.Value = 1; } catch(e){} });
+setupBuyZone("buyBlocks", "buyBlocksView", 100, "🧱 Все блоки открыты!", { r: 0.4, g: 0.4, b: 0.4 }, function(p) { try { p.Build.BlocksSet.Value = BuildBlocksSet.AllClear; } catch(e){} });
+
+// --- Сервисные зоны (Телепорт, ID, Онлайн) ---
+try {
+  var tpTrigger = AreaPlayerTriggerService.Get("tpTrigger");
+  if (tpTrigger) {
+    tpTrigger.Tags = ["tp"];
+    tpTrigger.Enable = true;
+    tpTrigger.OnEnter.Add(function(p) {
+      try { p.Spawns.Spawn(); p.Ui.Hint.Value = "Телепорт!"; } catch(e) {}
+    });
+  }
+
+  var idTrigger = AreaPlayerTriggerService.Get("showIdTrigger");
+  if (idTrigger) {
+    idTrigger.Tags = ["showId"];
+    idTrigger.Enable = true;
+    idTrigger.OnEnter.Add(function(p) {
+      try {
+        var id = p.id || p.Id || "Unknown";
+        p.Ui.Hint.Value = "Твой ID: " + id;
+      } catch(e) {}
+    });
+  }
+
+  var onlineTrigger = AreaPlayerTriggerService.Get("onlineTrigger");
+  if (onlineTrigger) {
+    onlineTrigger.Tags = ["online"];
+    onlineTrigger.Enable = true;
+    onlineTrigger.OnEnter.Add(function(p) {
+      try { p.Ui.Hint.Value = "Игроков онлайн: " + Players.Count; } catch(e) {}
+    });
+  }
+  
+  var botTrigger = AreaPlayerTriggerService.Get("botSpawnTrigger");
+  if (botTrigger) {
+    botTrigger.Tags = ["botSpawn"];
+    botTrigger.Enable = true;
+    botTrigger.OnEnter.Add(function(p) {
+      try {
+        if (IsAdmin(p)) {
+          Bots.Spawn(1, 1);
+          p.PopUp("🤖 Бот заспавнен!");
+        } else {
+          p.Ui.Hint.Value = "Только админ";
+        }
+      } catch(e) {}
+    });
+  }
+} catch (e) {}
+
+// --- Чат-команды ---
 try {
   Chat.OnPlayerChat.Add(function(player, message) {
-    var msg = message.toLowerCase().trim();
-
-    if (msg === "/help") {
-      player.PopUp(
-        "=== ЧАТ-КОМАНДЫ ===\n" +
-        "/help — эта справка\n" +
-        "/myid — твой ID\n" +
-        "/coins — сколько монет\n" +
-        "/respawn — переспавниться\n" +
-        "--- АДМИН ---\n" +
-        "/admin — выдать админку\n" +
-        "/god — бессмертие\n" +
-        "/fly — полёт\n" +
-        "/all — всё оружие\n" +
-        "/bot — заспавнить бота\n" +
-        "\n" +
-        "=== ЗОНЫ НА КАРТЕ ===\n" +
-        "ФАРМ:\n" +
-        "farm1 → +10🪙\n" +
-        "farm2 → +50🪙\n" +
-        "farm3 → +100🪙\n" +
-        "МАГАЗИН:\n" +
-        "buyWeapon → оружие (100🪙)\n" +
-        "buySecondary → вторичное (50🪙)\n" +
-        "buyInfWeapon → ∞патроны (300🪙)\n" +
-        "buyExplosive → взрывчатка (200🪙)\n" +
-        "buyFly → полёт (500🪙)\n" +
-        "buyHp → +HP (150🪙)\n" +
-        "buySkin → скин (250🪙)\n" +
-        "buyBlocks → все блоки (100🪙)\n" +
-        "СЕРВИС:\n" +
-        "botSpawn → бот (админ)\n" +
-        "tp → телепорт\n" +
-        "online → онлайн\n" +
-        "showId → твой ID\n" +
-        "\n" +
-        "Как создать зону:\n" +
-        "1. Открой редактор карты\n" +
-        "2. Создай область (Area)\n" +
-        "3. Назови её одним из тегов выше\n" +
-        "4. Покрась в цвет зоны (жёлтый — фарм)"
-      );
-      return;
-    }
-
-    if (msg === "/myid") {
-      try { player.PopUp("Твой ID: " + player.id); } catch(e) { player.PopUp("ID недоступен"); }
-      return;
-    }
-
-    if (msg === "/coins") {
-      player.PopUp("У тебя " + player.Properties.Scores.Value + " 🪙");
-      return;
-    }
-
-    if (msg === "/respawn") {
-      player.Spawns.Spawn();
-      player.PopUp("Переспавн!");
-      return;
-    }
-
-    if (IsAdmin(player)) {
-      if (msg === "/admin") { GiveAdmin(player); return; }
-      if (msg === "/god") {
-        try { player.Damage.DamageIn.Value = false; } catch(e) {}
-        player.PopUp("Бессмертие включено!");
+    try {
+      var msg = message.toLowerCase().trim();
+      
+      if (msg === "/help") {
+        player.PopUp("=== КОМАНДЫ ===\n/help — справка\n/myid — твой ID\n/coins — монеты\n/respawn — респаун\n--- АДМИН ---\n/admin — админка\n/god — бессмертие\n/fly — полёт");
         return;
       }
-      if (msg === "/fly") { player.Build.FlyEnable.Value = true; player.PopUp("Полёт включён!"); return; }
-      if (msg === "/all") { GiveAdmin(player); player.PopUp("Всё оружие выдано!"); return; }
-      if (msg === "/bot") {
-        try { Bots.Spawn(1, 1); player.PopUp("🤖 Бот заспавнен!"); } catch(e) { player.PopUp("Бот: API недоступен"); }
+      
+      if (msg === "/myid") {
+        var id = player.id || player.Id || "Unknown";
+        player.PopUp("Твой ID: " + id);
         return;
       }
-    } else {
-      if (msg === "/admin" || msg === "/god" || msg === "/fly" || msg === "/all" || msg === "/bot") {
-        player.PopUp("Эта команда только для админа!");
+      
+      if (msg === "/coins") {
+        var score = player.Properties ? player.Properties.Scores.Value : 0;
+        player.PopUp("У тебя " + score + " монет");
         return;
       }
-    }
+      
+      if (msg === "/respawn") {
+        player.Spawns.Spawn();
+        player.PopUp("Респаун!");
+        return;
+      }
+
+      if (IsAdmin(player)) {
+        if (msg === "/admin") {
+          // Логика выдачи админки (дублирует вход в команду)
+          player.Inventory.Main.Value = true;
+          player.Inventory.MainInfinity.Value = true;
+          player.Inventory.Secondary.Value = true;
+          player.Inventory.SecondaryInfinity.Value = true;
+          player.Inventory.Explosive.Value = true;
+          player.Inventory.ExplosiveInfinity.Value = true;
+          player.Inventory.Build.Value = true;
+          player.Inventory.BuildInfinity.Value = true;
+          player.Build.FlyEnable.Value = true;
+          Damage.GetContext().DamageOut.Value = false;
+          player.PopUp("Админка активна!");
+          return;
+        }
+        if (msg === "/god") {
+          Damage.GetContext().DamageOut.Value = false;
+          player.PopUp("Бессмертие ВКЛ");
+          return;
+        }
+        if (msg === "/fly") {
+          player.Build.FlyEnable.Value = true;
+          player.PopUp("Полёт ВКЛ");
+          return;
+        }
+      } else {
+        if (msg === "/admin" || msg === "/god" || msg === "/fly") {
+          player.PopUp("❌ Только для админа!");
+          return;
+        }
+      }
+    } catch (e) {}
   });
-} catch(e) {}
+} catch (e) {}
