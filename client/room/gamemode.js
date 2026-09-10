@@ -12,6 +12,15 @@ Teams.Clear();
 var mainTeam = Teams.Add("Blue", "Строители", { r: 50, g: 150, b: 255 });
 mainTeam.Spawns.SpawnPointsGroups.Add(1);
 
+// --- РАЗРЕШИТЬ ВХОД В КОМАНДУ ---
+Teams.OnRequestJoinTeam.Add(function(player, team) {
+  team.Add(player);
+});
+
+Teams.OnPlayerChangeTeam.Add(function(player) {
+  player.Spawns.Spawn();
+});
+
 // --- БЕСКОНЕЧНОЕ ВРЕМЯ ---
 var roomCtx = Room.GetContext();
 if (roomCtx && roomCtx.Time) {
